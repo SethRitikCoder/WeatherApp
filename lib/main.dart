@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/providers/weather_provider.dart';
-import 'package:flutter_application_1/screens/home_screen.dart';
-import 'package:flutter_application_1/screens/splash_screen.dart';
+import 'package:weatherapp/providers/weather_provider.dart';
+import 'package:weatherapp/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 
 void main() {

@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/providers/weather_provider.dart';
-import 'package:flutter_application_1/widgets/uihelper.dart';
+import 'package:weatherapp/providers/weather_provider.dart';
+import 'package:weatherapp/widgets/uihelper.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:weather_icons/weather_icons.dart';

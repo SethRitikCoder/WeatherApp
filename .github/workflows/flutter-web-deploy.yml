@@ -1,0 +1,116 @@
+name: Build and Deploy Flutter Web
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: web-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  DEPLOY_BRANCH: deploy
+  DOCS_DIR: docs
+  REPO_NAME: WeatherApp
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set BASE_HREF
+        run: echo "BASE_HREF=/${{ env.REPO_NAME }}/" >> $GITHUB_ENV
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.41.9
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Bump build number
+        id: version
+        run: |
+          current_version="$(grep '^version:' pubspec.yaml | awk '{print $2}')"
+          version_name="${current_version%%+*}"
+          new_version="${version_name}+${GITHUB_RUN_NUMBER}"
+          sed -i -E "s/^version:.*/version: ${new_version}/" pubspec.yaml
+          echo "new_version=${new_version}" >> "$GITHUB_OUTPUT"
+
+      - name: Build Flutter Web (release)
+        run: |
+          set -e
+          flutter build web --release --base-href "${BASE_HREF}" --build-number "${GITHUB_RUN_NUMBER}"
+
+          if [ ! -d "build/web" ]; then
+            echo "Error: build/web does not exist. Flutter build failed."
+            exit 1
+          fi
+
+      - name: Setup 404.html for SPA
+        run: |
+          cat > "build/web/404.html" <<EOF
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <title>Flutter Web</title>
+            <script>
+              (function () {
+                var redirect = sessionStorage.redirect;
+                delete sessionStorage.redirect;
+                if (redirect && redirect !== location.href) {
+                  history.replaceState(null, "", redirect);
+                }
+              })();
+            </script>
+          </head>
+          <body></body>
+          </html>
+          EOF
+
+      - name: Checkout deploy branch
+        run: |
+          git stash --include-untracked
+          git fetch origin "${DEPLOY_BRANCH}" || echo "Deploy branch does not exist yet"
+
+          if git rev-parse --verify origin/${DEPLOY_BRANCH}; then
+            git checkout ${DEPLOY_BRANCH}
+          else
+            git checkout --orphan ${DEPLOY_BRANCH}
+            git reset --hard
+          fi
+
+      - name: Sync build/web to docs/
+        run: |
+          rm -rf "${DOCS_DIR}"
+          mkdir -p "${DOCS_DIR}"
+
+          cp -r build/web/* "${DOCS_DIR}/"
+
+      - name: Commit and push deploy branch
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "No changes to deploy."
+            exit 0
+          fi
+
+          git add "${DOCS_DIR}/"
+          git commit -m "chore(deploy): Flutter web build ${GITHUB_SHA::7} (run #${GITHUB_RUN_NUMBER}, version ${{ steps.version.outputs.new_version }})"
+          git push origin "${DEPLOY_BRANCH}"

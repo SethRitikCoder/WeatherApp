@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:flutter_application_1/models/geo_model.dart';
-import 'package:flutter_application_1/models/weather_model.dart';
+import 'package:weatherapp/models/geo_model.dart';
+import 'package:weatherapp/models/weather_model.dart';
 
 import 'package:http/http.dart' as http;
 
