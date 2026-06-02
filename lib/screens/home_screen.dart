@@ -180,7 +180,7 @@ class _MyWeatherScreenState extends State<MyWeatherScreen> {
 
                                         Uihelper.customText(
                                           data:
-                                              "Feels Like-${weathers.main?.feelsLike ?? ""}°C",
+                                              "Feels Like-${weathers.main?.feelsLike.round() ?? ""}°C",
                                           size: 15,
                                           color: Colors.black,
                                           weight: FontWeight.bold,
@@ -309,7 +309,8 @@ class _MyWeatherScreenState extends State<MyWeatherScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Uihelper.customText(
-                                        data: "${weathers.main?.temp ?? 0}",
+                                        data:
+                                            "${weathers.main?.temp.toStringAsFixed(1) ?? 0}",
 
                                         // data:"${weathers.main!.tempMax}°C",
                                         size: 125,
@@ -330,11 +331,12 @@ class _MyWeatherScreenState extends State<MyWeatherScreen> {
                                   ),
                                   SizedBox(height: screenheight * 0.03),
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.end, //round() ka use
                                     children: [
                                       Uihelper.customText(
                                         data:
-                                            "Max:${weathers.main?.tempMax ?? ""}°C /Min:${weathers.main?.tempMin ?? ""}°C",
+                                            "Max:${weathers.main?.tempMax.toStringAsFixed(1) ?? ""}°C /Min:${weathers.main?.tempMin.toStringAsFixed(1) ?? ""}°C",
                                         size: 15,
                                         color: Colors.black,
                                         weight: FontWeight.bold,
